@@ -4,8 +4,10 @@ import platform
 import time
 import colorama
 
-VERSION = "BETA 0.1.3"
+VERSION = "BETA 0.1.4"
 username = "Not logged in"
+info = f"{colorama.Fore.LIGHTBLUE_EX}[INFO] -> {colorama.Fore.RESET}"
+e = f"{colorama.Fore.RED}[ERROR] -> {colorama.Fore.RESET}"
 
 # General functions
 def clear():
@@ -24,71 +26,110 @@ def title(title):
 # Main functions
 def login():
     global client, username
+    global green, blue, light_red, re
+
     green = colorama.Fore.GREEN
     blue = colorama.Fore.BLUE
     light_red = colorama.Fore.LIGHTRED_EX
     re = colorama.Fore.RESET
+
     title("Login")
     clear()
-    print(f"{green}R AI Successfully Loaded{re}\n\n")
+    print(f"{info}{green}R AI Successfully Loaded{re}\n\n")
     while True:
-        print("Please enter your Hugging Face API key to continue.\n")
+        print(f"{info}Please enter your Hugging Face API key to continue.\n")
         api_key = input(f"{blue}HF API Key: {light_red}{re}")
         if api_key == "":
-            print("Invalid API key, please try again.\n")
+            print(f"{e}Invalid API key, please try again.\n")
         else:
             break
-    print("Logging in...\n")
+    clear()
+    print(f"{info}Logging in...\n")
     client = InferenceClient(
         provider="hf-inference",
         api_key=api_key
     )
-    print(f"{green}Login successful.{re}\n")
+    print(f"{info}{green}Login successful.{re}\n")
     
     # Fetch and store the user's username
     api = HfApi()
     user_info = api.whoami(token=api_key)
     username = user_info['name']
-    print(f"Logged in as: {light_red}{username}{re}\n")
+    print(f"{info}Logged in as: {light_red}{username}{re}\n")
     
     time.sleep(2)
-    print("Redirecting...")
+    print(f"{info}Redirecting...")
     time.sleep(1.5)
     return api_key
 
-def fetch_models(api_key):
-    api = HfApi()
-    models = api.list_models(author=username)
-    return models
-
-def model_select(api_key):
+def model_select(provider):
     title("Model Selection")
     clear()
-    models = fetch_models(api_key)
+    if provider == "mistralai":
+        models = [
+            "mistralai/Mistral-7B-Instruct-v0.2",
+            "mistralai/Mistral-Nemo-Instruct-2407",
+            "mistralai/Mistral-Small-24B-Instruct-2501"
+        ]
+    elif provider == "deepseek":
+        models = [
+            "deepseek-ai/DeepSeek-V3",
+            "deepseek-ai/deepseek-llm-67b-chat",
+            "deepseek-ai/DeepSeek-R1-Distill-Llama-70B"
+        ]
+    elif provider == "qwen":
+        models = [
+            "Qwen/Qwen2.5-VL-72B-Instruct",
+            "Qwen/Qwen2-VL-72B-Instruct",
+            "Qwen/Qwen2-VL-7B-Instruct"
+        ]
+    else:
+        models = []
+
     print("Available Models:\n")
     for i, model in enumerate(models):
-        print(f"[{i+1}] {model.modelId}")
+        print(f"[{i+1}] {model}")
     print("[99] Quit")
     while True:
-        choice = input("\nSelect a model by number: ")
+        choice = input(f"\n{info}Select a model by number: ")
         if choice.isdigit() and 1 <= int(choice) <= len(models):
-            return models[int(choice) - 1].modelId
+            return models[int(choice) - 1]
         elif choice == '99':
-            print("Exiting...")
+            print(f"{info}Exiting...")
             exit()
         else:
-            print("Invalid choice, please try again.")
+            print(f"{e}Invalid choice, please try again.")
+
+def provider_select():
+    title("Provider Selection")
+    clear()
+    print("Available Providers:\n")
+    providers = ["mistralai", "deepseek", "qwen"]
+    for i, provider in enumerate(providers):
+        print(f"[{i+1}] {provider}")
+    print("[99] Quit")
+    while True:
+        choice = input(f"\n{info}Select a provider by number: ")
+        if choice.isdigit() and 1 <= int(choice) <= len(providers):
+            return providers[int(choice) - 1]
+        elif choice == '99':
+            print(f"{info}Exiting...")
+            exit()
+        else:
+            print(f"{e}Invalid choice, please try again.")
 
 def main():
+    global username
+    global green, blue, light_red, re
+
     api_key = login()
     clear()
     title("Main")
-    model_name = model_select(api_key)
+    provider = provider_select()
+    model_name = model_select(provider)
+    clear()
     while True:
-        prompt = input("\nYou: ")
-        if prompt.lower() in ["exit", "quit"]:
-            print("Exiting...")
-            break
+        prompt = input(f"--({colorama.Fore.LIGHTMAGENTA_EX}{model_name}{re})\n|\n|--({colorama.Fore.RED}{username}{re}) -> ")
         messages = [
             {
                 "role": "user",
@@ -102,7 +143,7 @@ def main():
         )
         # Extract and print only the content of the message
         response_content = completion.choices[0].message.content
-        print(f"\n\nAI: {response_content}")
+        print(f"\n\n--({colorama.Fore.LIGHTMAGENTA_EX}{model_name}{re})\n|\n|--({colorama.Fore.RED}AI RESPONSE{re}) ->{response_content}\n\n")
 
 if __name__ == "__main__":
     main()
