@@ -4,7 +4,13 @@ R AI is a simple command-line interface (CLI) application that interacts with th
 
 ## Version
 
-BETA 0.1.3
+BETA 0.1.4
+
+## BETA 0.1.4 Changelog
+- New list of both Providers & AI Models. (NOTE: Not all the models currently work!!! Only the first 2 of the Mistral AI provider.);
+- New design of input format + general text formatting & colors;
+- Now the program will display your Hugging Face username in both title & in the input txt;
+- When your chatting with a model, now you can see it's name above the response.
 
 ## Features
 
